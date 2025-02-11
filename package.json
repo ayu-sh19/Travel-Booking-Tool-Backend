@@ -10,6 +10,7 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "appwrite": "^17.0.0",
     "axios": "^1.7.9",
     "canvas-confetti": "^1.9.3",
     "cors": "^2.8.5",

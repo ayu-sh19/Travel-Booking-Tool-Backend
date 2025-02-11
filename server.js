@@ -3,7 +3,7 @@ const express = require("express");
 const axios = require("axios");
 const cors = require("cors");
 const dotenv = require("dotenv");
-const { Client, Databases } = require("node-appwrite");
+const { Client, Account, Databases } = require("appwrite");
 
 dotenv.config();
 
@@ -18,6 +18,7 @@ const client = new Client()
   .setProject(process.env.APPWRITE_PROJECT_ID);
 
 const databases = new Databases(client);
+const account = new Account(client);
 
 async function getToken() {
   try {
@@ -82,32 +83,47 @@ async function fetchAmadeusToken() {
   }
 }
 
-/* app.get("/api/login", async (req, res) => {
+app.post("/api/login", async (req, res) => {
+  const payload = req.body;
   try {
-    const tokenResponse = await axios.post(
-      "https://test.api.amadeus.com/v1/security/oauth2/token",
-      new URLSearchParams({
-        grant_type: "client_credentials",
-        client_id: process.env.AMADEUS_CLIENT_ID,
-        client_secret: process.env.AMADEUS_CLIENT_SECRET,
-      }).toString(),
-      {
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      }
-    );
-    const token = tokenResponse.data.access_token;
-    console.log(token);
-    res.json(token);
+    const email = payload.email;
+    const password = payload.password;
+    const response = await account.createEmailPasswordSession(email, password);
+    res.json(response.data);
   } catch (error) {
-    console.error(
-      "Error in proxy endpoint:",
-      error.response?.data || error.message
-    );
-    res
-      .status(500)
-      .json({ error: "An error occurred while fetching hotel offers." });
+    throw error;
   }
-}); */
+});
+
+app.post("/api/logout", async (req, res) => {
+  const payload = req.body;
+  console.log(payload);
+  if (req.headers.cookie) {
+    client.headers["cookie"] = req.headers.cookie;
+  }
+  try {
+    // const email = payload.email;
+    // const password = payload.password;
+    // const session = await account.createEmailPasswordSession(email, password);
+    // console.log("Session Created", session.$id);
+    // const user = await account.get();
+    // console.log("Get User", user);
+    // const response = await account.deleteSession(session.$id.toString());
+    const response = await account.deleteSessions();
+    res.json(response.data);
+  } catch (error) {
+    throw error;
+  }
+});
+
+app.get("/api/getUser", async (req, res) => {
+  try {
+    const response = await account.get();
+    res.json(response.data);
+  } catch (error) {
+    throw error;
+  }
+});
 
 app.get("/api/hotel-offers", async (req, res) => {
   const { cityCode, checkInDate, checkOutDate, adults } = req.query;
