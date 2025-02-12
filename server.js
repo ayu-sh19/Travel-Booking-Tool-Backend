@@ -8,8 +8,53 @@ const { Client, Account, Databases } = require("appwrite");
 dotenv.config();
 
 const app = express();
-app.use(cors()); // Allow all origins or configure as needed
+// app.use(cors()); // Allow all origins or configure as needed
 app.use(express.json());
+
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+
+  // For example, only allow requests from your Vercel domain:
+  if (
+    origin &&
+    origin === "https://travel-booking-tool-frontend-x.vercel.app"
+  ) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
+    // If credentials (cookies, etc.) are used:
+    // res.setHeader('Access-Control-Allow-Credentials', 'true');
+  }
+
+  // Set allowed methods and headers for all requests
+  res.setHeader(
+    "Access-Control-Allow-Methods",
+    "GET, POST, PUT, DELETE, OPTIONS"
+  );
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+
+  next();
+});
+
+// Special handling for preflight OPTIONS requests on your API route
+app.options("/api/hotel-offers", (req, res) => {
+  // Set the CORS headers as above
+  const origin = req.headers.origin;
+  if (
+    origin &&
+    origin === "https://travel-booking-tool-frontend-x.vercel.app"
+  ) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
+    // res.setHeader('Access-Control-Allow-Credentials', 'true'); // if needed
+  }
+
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+
+  // **Important:** Allow private network access for requests coming from public origins
+  res.setHeader("Access-Control-Allow-Private-Network", "true");
+
+  // Respond with 200 OK for the preflight request
+  res.sendStatus(200);
+});
 
 // Endpoint to fetch hotel offers from Amadeus API
 
